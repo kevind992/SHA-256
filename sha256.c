@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 void sha256(){
 
 // The K constants, defined in Section 4.2.2.
-  uint32_t k[] = {
+  uint32_t K[] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -56,7 +56,7 @@ void sha256(){
   // Working variables (Section 6.2)
   uint32_t a, b, c, d, e, f, g, h;
   // The Hast value (section 6.2)
-  uint32_t H[8];
+
   // Two temporary variables (Section 6.2)
   uint32_t T1, T2;
 
@@ -74,47 +74,49 @@ void sha256(){
   };
 
   // The current message block
-  uint32_t M[16] = {0, 0, 0, 0, 0, 0, 0, 0}
+  uint32_t M[16] = {0, 0, 0, 0, 0, 0, 0, 0};
 
   // For looping
   int i, t;
-
-  // From page 22, W[t] = M[t] from 0 <= t <= 15
-  for (t = 0; t < 16; t++)
-    W[t] = M[t]; 
   
-  for (t = 16; t < 64; t++)
-    W[t] = sig_1(W[t-2]) + W[t-7] + sig_0(W[t-15]) + W[t-16];
+  for(i = 0; i < 1; i++){
 
-  // Initialise a, b, c, d and e as per Step 2, Page 22. 
-  a = H[0]; b = H[1]; c = H[2]; d = H[3]; 
-  e = H[4]; f = H[5]; g = H[6]; h = H[7];
+    // From page 22, W[t] = M[t] from 0 <= t <= 15
+    for (t = 0; t < 16; t++)
+      W[t] = M[t]; 
+  
+    for (t = 16; t < 64; t++)
+      W[t] = sig_1(W[t-2]) + W[t-7] + sig_0(W[t-15]) + W[t-16];
 
-  // Step 3.
-  for(t = 0; t < 64; t++){
-    T1 = h + SIG1(e) + Ch(e,f,g) + K[t] + W[t];
-    T2 = SIG0(a) + Maj(a,b,c);
-    h = g;
-    g = f;
-    f = e;
-    e = d + T1;
-    d = c;
-    c = b;
-    b = a;
-    a = T1 + T2; 
+    // Initialise a, b, c, d and e as per Step 2, Page 22. 
+    a = H[0]; b = H[1]; c = H[2]; d = H[3]; 
+    e = H[4]; f = H[5]; g = H[6]; h = H[7];
+
+    // Step 3.
+    for(t = 0; t < 64; t++){
+      T1 = h + SIG1(e) + Ch(e,f,g) + K[t] + W[t];
+      T2 = SIG0(a) + Maj(a,b,c);
+      h = g;
+      g = f;
+      f = e;
+      e = d + T1;
+      d = c;
+      c = b;
+      b = a;
+      a = T1 + T2; 
+    }
+
+    // Step 4.
+    H[0] = a + H[0];
+    H[1] = a + H[1];
+    H[2] = c + H[2];
+    H[3] = d + H[3];
+    H[4] = e + H[4];
+    H[5] = f + H[5];
+    H[6] = g + H[6];
+    H[7] = h + H[7];
   }
-
-  // Step 4.
-  H[0] = a + H[0];
-  H[1] = a + H[1];
-  H[2] = c + H[2];
-  H[3] = d + H[3];
-  H[4] = e + H[4];
-  H[5] = f + H[5];
-  H[6] = g + H[6];
-  H[7] = h + H[7];
-
-  printf("%x, %x, %x, %x, %x, %x, %x, %x\n", H[0], H[1], H[2], H[3], H[4], H[6], H[7]);
+  printf("%x, %x, %x, %x, %x, %x, %x, %x\n", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
 
 }
 
