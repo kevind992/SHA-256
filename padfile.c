@@ -31,6 +31,7 @@ int main (int argc, char *argv[]){
         nobits = nobits + (nobytes * 8);
 
         if(nobytes < 56){
+
             printf("Ive found a block with less then 55 bytes..\n");
             M.e[nobytes] = 0x80;
             while (nobytes < 56){
