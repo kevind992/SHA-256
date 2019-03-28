@@ -26,26 +26,26 @@ union msgblock {
 enum status {READ, PAD0, PAD1, FINISH};
 
 // Retrieves the next message block.
-int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits);
+int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits);
 
 void sha256(FILE *f);
 
 int main(int argc, char *argv[]){
   
   // Open the file given as first command line argument
-  FILE* f;
-  f = fopen(argv[1], "r");
+  FILE* msgf;
+  msgf = fopen(argv[1], "r");
   // Error handling here
 
   // Run the secure hash algorithm on the file
-  sha256(f);
+  sha256(msgf);
   // Close the file
-  fclose(f);
+  fclose(msgf);
 
   return 0;
 }
 
-void sha256(FILE *f){
+void sha256(FILE *msgf){
 
   // The current message block
   union msgblock M;
@@ -102,7 +102,7 @@ void sha256(FILE *f){
   // For looping
   int i, t;
   
-  while(nextmsgblock(f, M.t, S, nobits)){
+  while(nextmsgblock(msgf,&M, &S, &nobits)){
 
     // From page 22, W[t] = M[t] from 0 <= t <= 15
     for (t = 0; t < 16; t++)
@@ -145,7 +145,7 @@ void sha256(FILE *f){
 
 
 
-int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
+int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits){
 
   // The number of bytes we get from fread.    
   uint64_t nobytes;
@@ -164,10 +164,10 @@ int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
       M->e[i] = 0x00;
     }
       // Set the last 64 bits to the number of bits in the file (should be big-endian)
-      M->s[7] = nobits;
+      M->s[7] = *nobits;
     
     // If S was PAD1, then set the first bit of M to one.  
-    if ( S == PAD1){
+    if (*S == PAD1){
       M->e[0] = 0x80;
     }
     // Keep the loop in sha256 going for one more iteration.
@@ -175,7 +175,7 @@ int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
   }
 
     // If we get down here, we haven't finished reading the file (S == READ).
-    nobytes = fread(M->e, 1, 64, f);
+    nobytes = fread(M->e, 1, 64, msgf);
     
     // Keep track of the number of bytes we've read/
     *nobits = *nobits + (nobytes * 8);
@@ -191,9 +191,9 @@ int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
             M->e[nobytes] = 0x00;
         }
         // Append the file size in bits as a (should be big endian) unsigned 64 bit int.
-        M->s[7] = nobits;
+        M->s[7] = *nobits;
         // Tell S we are finished
-        S = FINISH;
+        *S = FINISH;
     // Otherwise, check if we can put some padding into this message block.    
     } else if (nobytes < 64){
       // Tell S we need another message block, with padding into this message block.
@@ -206,7 +206,7 @@ int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
         M->e[nobytes] = 0x00;
       }
     // Otherwise, check if we're just at the end of the file  
-    } else if (feof(f)) {
+    } else if (feof(msgf)) {
       // Tell S that we need another message block with all the padding.  
       *S = PAD1;
     }
