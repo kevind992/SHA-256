@@ -5,6 +5,16 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// Macros Functions
+#define rotr(x,n)  "(x >> n) | (x << (32 -n))"
+#define shr(n, x)  "(x >> n)"
+#define sig_0(x)   "(rotr(7, x) ^ rotr(18, x) ^ shr(3, x))"
+#define sig_1(x)   "(rotr(17, x) ^ rotr(19, x) ^ shr(10, x))"
+#define SIG0(x)    "(rotr(2,x) ^ rotr(13, x) ^ rotr(22, x))"
+#define SIG1(x)    "(rotr(6,x) ^ rotr(11, x) ^ rotr(25, x))"
+#define Ch(x,y,z) "((x & y) ^ ((!x) & z))"
+#define Maj(x,y,z)"((x & y) ^ (x & z) ^ (y & z))"
+
 // Represents a message block
 union msgblock {
     uint8_t e[64];
@@ -14,23 +24,6 @@ union msgblock {
 
 // A flag for where weare in reading the file
 enum status {READ, PAD0, PAD1, FINISH};
-
-
-// See Sections 4.1.2 for definitions.
-uint32_t sig_0(uint32_t x);
-uint32_t sig_1(uint32_t x);
-
-// See Sections 3.2 for definitions
-uint32_t rotr(uint32_t n, uint32_t x);
-uint32_t shr(uint32_t n, uint32_t x);
-
-// See Section 4.1.2 for definitions.
-uint32_t SIG0(uint32_t x);
-uint32_t SIG1(uint32_t x);
-
-// See Section 4.1.2 for definiitions
-uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
-uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
 
 // Retrieves the next message block.
 int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits);
@@ -150,33 +143,7 @@ void sha256(FILE *f){
 
 }
 
-// Fix these with macros
-uint32_t rotr(uint32_t n, uint32_t x){
-  return (x >> n) | (x << (32 -n));
-}
-uint32_t shr(uint32_t n, uint32_t x){
-  return (x >> n);
-}
-uint32_t sig_0(uint32_t x){
-  // See Sections 3.2 and 4.1.2 for definitions.
-  return (rotr(7, x) ^ rotr(18, x) ^ shr(3, x));
-}
-uint32_t sig_1(uint32_t x){
-  return (rotr(17, x) ^ rotr(19, x) ^ shr(10, x));
-}
 
-uint32_t SIG0(uint32_t x){
-  return (rotr(2,x) ^ rotr(13, x) ^ rotr(22, x));
-}
-uint32_t SIG1(uint32_t x){
-  return (rotr(6,x) ^ rotr(11, x) ^ rotr(25, x));
-}
-uint32_t Ch(uint32_t x, uint32_t y, uint32_t z){
-  return ((x & y) ^ ((!x) & z));
-}
-uint32_t Maj(uint32_t x, uint32_t y, uint32_t z){
-  return ((x & y) ^ (x & z) ^ (y & z));
-}
 
 int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
 
