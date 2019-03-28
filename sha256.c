@@ -15,6 +15,8 @@
 #define SIG1(x)    (rotr(6,x) ^ rotr(11, x) ^ rotr(25, x))
 #define Ch(x,y,z) ((x & y) ^ ((!x) & z))
 #define Maj(x,y,z)((x & y) ^ (x & z) ^ (y & z))
+// Macros for changing from little endian to big endian
+#define Swap(x) (((x>>24)&0xff) | ((x<<8)&0xff0000) | ((x>>8)&0xff00) | ((x<<24)&0xff000000))
 
 // Represents a message block
 union msgblock {
@@ -36,9 +38,10 @@ int main(int argc, char *argv[]){
   // Open the file given as first command line argument
   FILE* msgf;
   msgf = fopen(argv[1], "r");
-  // Error handling here
+
+  // File error handling 
   if (! msgf){
-    printf("Error opening file..\n");
+    printf("Error opening file or no file specified..\n");
     exit(-1);
   }
   // Run the secure hash algorithm on the file
@@ -50,17 +53,12 @@ int main(int argc, char *argv[]){
 }
 
 void sha256(FILE *msgf){
-
   // The current message block
   union msgblock M;
-
   // the number of bits read from the file
   uint64_t nobits = 0;
-
   // The status of the message blocks, in terms of padding
   enum status S = READ;
-
-
 // The K constants, defined in Section 4.2.2.
   uint32_t K[] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
@@ -85,8 +83,6 @@ void sha256(FILE *msgf){
   uint32_t W[64];
   // Working variables (Section 6.2)
   uint32_t a, b, c, d, e, f, g, h;
-  // The Hast value (section 6.2)
-
   // Two temporary variables (Section 6.2)
   uint32_t T1, T2;
 
@@ -165,9 +161,8 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
     for(i = 0; i < 56; i++){
       M->e[i] = 0x00;
     }
-      // Set the last 64 bits to the number of bits in the file (should be big-endian)
-      M->s[7] = *nobits;
-    
+    // Set the last 64 bits to the number of bits in the file (should be big-endian)
+    M->s[7] = Swap(*nobits);
     // If S was PAD1, then set the first bit of M to one.  
     if (*S == PAD1){
       M->e[0] = 0x80;
@@ -175,16 +170,12 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
     // Keep the loop in sha256 going for one more iteration.
     return 1;
   }
-
     // If we get down here, we haven't finished reading the file (S == READ).
     nobytes = fread(M->e, 1, 64, msgf);
-    
     // Keep track of the number of bytes we've read/
     *nobits = *nobits + (nobytes * 8);
-
     // If we read less than 56 bytes, we can put all padding in this message block.
     if(nobytes < 56){
-
         // Add the one bit , as per the standard.
         M->e[nobytes] = 0x80;
         // Add zero bits until the last 64 bits.
@@ -212,7 +203,6 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
       // Tell S that we need another message block with all the padding.  
       *S = PAD1;
     }
-
     // If we get this far, then return 1 so that this function is called again.
     return 1;
 }
