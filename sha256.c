@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 // Macros Functions
 #define rotr(x,n)  (x >> n) | (x << (32 -n))
@@ -162,7 +163,8 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
       M->e[i] = 0x00;
     }
     // Set the last 64 bits to the number of bits in the file (should be big-endian)
-    M->s[7] = *nobits;
+    printf("Test %2llu \n", nobits);
+    M->s[7] = Swap(*nobits);
     // If S was PAD1, then set the first bit of M to one.  
     if (*S == PAD1){
       M->e[0] = 0x80;
@@ -184,7 +186,8 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
             M->e[nobytes] = 0x00;
         }
         // Append the file size in bits as a (should be big endian) unsigned 64 bit int.
-        M->s[7] = *nobits;
+        printf("Test %2llu \n", nobits);
+        M->s[7] = Swap(*nobits);
         // Tell S we are finished
         *S = FINISH;
     // Otherwise, check if we can put some padding into this message block.    
