@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 // Macros Functions
 #define rotr(x,n)  (x >> n) | (x << (32 -n))
@@ -36,7 +37,10 @@ int main(int argc, char *argv[]){
   FILE* msgf;
   msgf = fopen(argv[1], "r");
   // Error handling here
-
+  if (! msgf){
+    printf("Error opening file..\n");
+    exit(-1);
+  }
   // Run the secure hash algorithm on the file
   sha256(msgf);
   // Close the file
@@ -139,11 +143,9 @@ void sha256(FILE *msgf){
     H[6] = g + H[6];
     H[7] = h + H[7];
   }
-  printf("%x, %x, %x, %x, %x, %x, %x, %x\n", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
+  printf("%x %x %x %x %x %x %x %x\n", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
 
 }
-
-
 
 int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits){
 
