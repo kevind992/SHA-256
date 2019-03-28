@@ -6,14 +6,14 @@
 #include <stdint.h>
 
 // Macros Functions
-#define rotr(x,n)  "(x >> n) | (x << (32 -n))"
-#define shr(n, x)  "(x >> n)"
-#define sig_0(x)   "(rotr(7, x) ^ rotr(18, x) ^ shr(3, x))"
-#define sig_1(x)   "(rotr(17, x) ^ rotr(19, x) ^ shr(10, x))"
-#define SIG0(x)    "(rotr(2,x) ^ rotr(13, x) ^ rotr(22, x))"
-#define SIG1(x)    "(rotr(6,x) ^ rotr(11, x) ^ rotr(25, x))"
-#define Ch(x,y,z) "((x & y) ^ ((!x) & z))"
-#define Maj(x,y,z)"((x & y) ^ (x & z) ^ (y & z))"
+#define rotr(x,n)  (x >> n) | (x << (32 -n))
+#define shr(n,x)  (x >> n)
+#define sig_0(x)   (rotr(7, x) ^ rotr(18, x) ^ shr(3, x))
+#define sig_1(x)   (rotr(17, x) ^ rotr(19, x) ^ shr(10, x))
+#define SIG0(x)    (rotr(2,x) ^ rotr(13, x) ^ rotr(22, x))
+#define SIG1(x)    (rotr(6,x) ^ rotr(11, x) ^ rotr(25, x))
+#define Ch(x,y,z) ((x & y) ^ ((!x) & z))
+#define Maj(x,y,z)((x & y) ^ (x & z) ^ (y & z))
 
 // Represents a message block
 union msgblock {
