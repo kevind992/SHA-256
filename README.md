@@ -44,5 +44,17 @@ The output after the program has run should be a series of characters
 ## Project Research
 
 ## Project Extras
+
 The extras which were added to the project are as follows 
- - 
+
+ - When adding the last 65bits I am converting from Little Endian to Big Endian as the Nist Standard specifies. This is being done by using a macros function. The following code snippet deminstrates how this was achieved 
+```sh
+   // Macros for changing from little endian to big endian
+   #define Swap(x) (((x>>24)&0xff) | ((x<<8)&0xff0000) | ((x>>8)&0xff00) | ((x<<24)&0xff000000))
+```
+The convertion was completed before the hashing by passing nobits into the macros function before adding to the pointer
+```sh
+   M->s[7] = Swap(*nobits);
+```
+ - I am handling file read errors
+ - Instead of creating one line functions I am using macros functions
