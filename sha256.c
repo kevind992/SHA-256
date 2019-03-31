@@ -16,7 +16,15 @@
 #define Ch(x,y,z) ((x & y) ^ ((!x) & z))
 #define Maj(x,y,z)((x & y) ^ (x & z) ^ (y & z))
 // Macros for changing from little endian to big endian
-#define Swap(x) (((x>>24)&0xff) | ((x<<8)&0xff0000) | ((x>>8)&0xff00) | ((x<<24)&0xff000000))
+#define Swap(x) \
+	( (((x) >> 56) & 0x00000000000000FF) | (((x) >> 40) & 0x000000000000FF00) | \
+	  (((x) >> 24) & 0x0000000000FF0000) | (((x) >>  8) & 0x00000000FF000000) | \
+	  (((x) <<  8) & 0x000000FF00000000) | (((x) << 24) & 0x0000FF0000000000) | \
+	  (((x) << 40) & 0x00FF000000000000) | (((x) << 56) & 0xFF00000000000000) )
+// Macros for checking if its big endian    
+ #define BIG_ENDIAN_CHECK (*(uint16_t *)"\0\xff" < 0x100)   
+
+
 
 // Represents a message block
 union msgblock {
@@ -163,7 +171,12 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
     }
     
     // Set the last 64 bits to the number of bits in the file (should be big-endian)
-    M->s[7] = *nobits;
+    if (BIG_ENDIAN_CHECK) {
+			M->s[7] = *nobits;
+		}
+		else {
+			M->s[7] = Swap(*nobits);
+		}
     // If S was PAD1, then set the first bit of M to one.  
     if (*S == PAD1){
       M->e[0] = 0x80;
@@ -185,7 +198,12 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
             M->e[nobytes] = 0x00;
         }
         // Append the file size in bits as a (should be big endian) unsigned 64 bit int.
-        M->s[7] = *nobits;
+        if (BIG_ENDIAN_CHECK) {
+			    M->s[7] = *nobits;
+	    	}
+		    else {
+		      M->s[7] = SWAP_UINT64(*nobits);
+		    }
         // Tell S we are finished
         *S = FINISH;
     // Otherwise, check if we can put some padding into this message block.    
