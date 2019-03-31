@@ -16,7 +16,8 @@
 #define Ch(x,y,z) ((x & y) ^ ((!x) & z))
 #define Maj(x,y,z)((x & y) ^ (x & z) ^ (y & z))
 // Macros for changing from little endian to big endian
-#define Swap(x) \
+#define Swap32(x) (((x) >> 24) | (((x) & 0x00FF0000) >> 8) | (((x) & 0x0000FF00) << 8) | ((x) << 24))
+#define Swap64(x) \
 	( (((x) >> 56) & 0x00000000000000FF) | (((x) >> 40) & 0x000000000000FF00) | \
 	  (((x) >> 24) & 0x0000000000FF0000) | (((x) >>  8) & 0x00000000FF000000) | \
 	  (((x) <<  8) & 0x000000FF00000000) | (((x) << 24) & 0x0000FF0000000000) | \
@@ -112,12 +113,19 @@ void sha256(FILE *msgf){
   
   while(nextmsgblock(msgf,&M, &S, &nobits)){
 
-    // From page 22, W[t] = M[t] from 0 <= t <= 15
-    for (t = 0; t < 16; t++)
-      W[t] = M.t[t]; 
-  
-    for (t = 16; t < 64; t++)
-      W[t] = sig_1(W[t-2]) + W[t-7] + sig_0(W[t-15]) + W[t-16];
+    for(t = 0; t < 16; t++) {
+	       if (BIG_ENDIAN_CHECK) {
+	       	  W[t] = M.t[t];
+	       }
+	       else {
+    	          W[t] = Swap32(M.t[t]);
+	       } // end if-else
+
+	    } // end loop
+	                                                                           
+	    for(t = 16; t < 64; ++t) {
+	       W[t] = SIG1(W[t-2]) + W[t-7] + SIG0(W[t-15]) + W[t-16];
+	    }
 
     // Initialise a, b, c, d and e as per Step 2, Page 22. 
     a = H[0]; b = H[1]; c = H[2]; d = H[3]; 
