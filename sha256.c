@@ -202,7 +202,7 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
 			    M->s[7] = *nobits;
 	    	}
 		    else {
-		      M->s[7] = SWAP_UINT64(*nobits);
+		      M->s[7] = Swap(*nobits);
 		    }
         // Tell S we are finished
         *S = FINISH;
