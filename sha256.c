@@ -6,15 +6,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-// Macros Functions
-#define rotr(x,n)  (x >> n) | (x << (32 -n))
-#define shr(n,x)  (x >> n)
-#define sig_0(x)   (rotr(7, x) ^ rotr(18, x) ^ shr(3, x))
-#define sig_1(x)   (rotr(17, x) ^ rotr(19, x) ^ shr(10, x))
-#define SIG0(x)    (rotr(2,x) ^ rotr(13, x) ^ rotr(22, x))
-#define SIG1(x)    (rotr(6,x) ^ rotr(11, x) ^ rotr(25, x))
-#define Ch(x,y,z) ((x & y) ^ ((!x) & z))
-#define Maj(x,y,z)((x & y) ^ (x & z) ^ (y & z))
+//Macros Functions
+#define rotr(x,n) (((x) >> (n)) | ((x) << (32-(n))))
+#define SIG0(x) (rotr(x,7) ^ rotr(x,18) ^ ((x) >> 3 ))
+#define SIG1(x) (rotr(x,17) ^ rotr(x,19) ^ ((x) >> 10))
+#define Ch(x,y,z) (((x) & (y)) ^ (~(x) & (z)))
+#define Maj(x,y,z) (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
+#define sig_0(x) (rotr(x,2) ^ rotr(x,13) ^ rotr(x,22))
+#define sig_1(x) (rotr(x,6) ^ rotr(x,11) ^ rotr(x,25))
+
 // Macros for changing from little endian to big endian
 #define Swap32(x) (((x) >> 24) | (((x) & 0x00FF0000) >> 8) | (((x) & 0x0000FF00) << 8) | ((x) << 24))
 #define Swap64(x) \
@@ -133,8 +133,8 @@ void sha256(FILE *msgf){
 
     // Step 3.
     for(t = 0; t < 64; t++){
-      T1 = h + SIG1(e) + Ch(e,f,g) + K[t] + W[t];
-      T2 = SIG0(a) + Maj(a,b,c);
+      T1 = h + sig_1(e) + Ch(e,f,g) + K[t] + W[t];
+      T2 = sig_0(a) + Maj(a,b,c);
       h = g;
       g = f;
       f = e;
@@ -147,7 +147,7 @@ void sha256(FILE *msgf){
 
     // Step 4.
     H[0] = a + H[0];
-    H[1] = a + H[1];
+    H[1] = b + H[1];
     H[2] = c + H[2];
     H[3] = d + H[3];
     H[4] = e + H[4];
@@ -183,7 +183,7 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
 			M->s[7] = *nobits;
 		}
 		else {
-			M->s[7] = Swap(*nobits);
+			M->s[7] = Swap64(*nobits);
 		}
     // If S was PAD1, then set the first bit of M to one.  
     if (*S == PAD1){
@@ -210,7 +210,7 @@ int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits
 			    M->s[7] = *nobits;
 	    	}
 		    else {
-		      M->s[7] = Swap(*nobits);
+		      M->s[7] = Swap64(*nobits);
 		    }
         // Tell S we are finished
         *S = FINISH;
